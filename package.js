@@ -7,11 +7,6 @@ Package.describe({
 });
 
 
-Npm.depends({
-  mocha: "2.1.0"
-});
-
-
 Package.onUse(function (api) {
   api.versionsFrom('1.0');
 
@@ -57,6 +52,7 @@ Package.onUse(function (api) {
 
   api.addFiles(['meteor/src/lib/log.js']);
 
+  api.addFiles('mocha.js', 'server');
   api.addFiles('meteor/src/server/mocha.coffee', 'server');
 
   api.addFiles([

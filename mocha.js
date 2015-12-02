@@ -466,7 +466,7 @@ function isArray(obj) {
 
 function EventEmitter(){};
 
-  window.practical.mocha.EventEmitter = EventEmitter;
+global.practical.mocha.EventEmitter = EventEmitter;
 
 /*Practical Meteor changes*/
 /**
@@ -1462,7 +1462,7 @@ exports = module.exports = Mocha;
 if (typeof process !== 'undefined' && typeof process.cwd === 'function') {
   var join = path.join
     , cwd = process.cwd();
-  module.paths.push(cwd, join(cwd, 'node_modules'));
+  //module.paths.push(cwd, join(cwd, 'node_modules'));
 }
 
 /**
@@ -2807,7 +2807,7 @@ function HTML(runner, options) {
 
   // Wee need to expose the client side HTML report to the world,
   // so we can use it in our ClientServerReporterProxy
-  window.practical.mocha.reporters.HTML = HTML;
+  global.practical.mocha.reporters.HTML = HTML;
 /**
  * Makes a URL, preserving querystring ("search") parameters.
  * @param {string} s
@@ -5081,6 +5081,7 @@ Runner.prototype.runSuite = function(suite, fn){
  */
 
 Runner.prototype.uncaught = function(err){
+  console.log("Runner.uncaught", err)
   if (err) {
     debug('uncaught exception %s', err !== function () {
       return this;
@@ -5125,15 +5126,18 @@ Runner.prototype.run = function(fn){
   var self = this
     , fn = fn || function(){};
 
-  function uncaught(err){
+
+  var uncaught = function(err){
     self.uncaught(err);
-  }
+  };
 
   debug('start');
+
 
   // callback
   this.on('end', function(){
     debug('end');
+    console.log("end");
     process.removeListener('uncaughtException', uncaught);
     fn(self.failures);
   });
@@ -5145,6 +5149,8 @@ Runner.prototype.run = function(fn){
     self.emit('end');
   });
 
+  console.log("Runner.run: before installing uncaught");
+  console.log("Runner.run: pid", process.argv);
   // uncaught exception
   process.on('uncaughtException', uncaught);
 
@@ -6187,46 +6193,51 @@ var clearInterval = global.clearInterval;
  * to allow running node code in
  * the browser.
  */
+var process = global.process || {};
+if(Meteor && Meteor.isClient) {
 
-var process = {};
-process.exit = function(status){};
-process.stdout = {};
+  process.exit = function (status) {
+  };
+  process.stdout = {};
 
-var uncaughtExceptionHandlers = [];
+  var uncaughtExceptionHandlers = [];
 
-var originalOnerrorHandler = global.onerror;
+  var originalOnerrorHandler = global.onerror;
 
-/**
- * Remove uncaughtException listener.
- * Revert to original onerror handler if previously defined.
- */
+  /**
+   * Remove uncaughtException listener.
+   * Revert to original onerror handler if previously defined.
+   */
 
-process.removeListener = function(e, fn){
-  if ('uncaughtException' == e) {
-    if (originalOnerrorHandler) {
-      global.onerror = originalOnerrorHandler;
-    } else {
-      global.onerror = function() {};
+  process.removeListener = function (e, fn) {
+    if ('uncaughtException' == e) {
+      if (originalOnerrorHandler) {
+        global.onerror = originalOnerrorHandler;
+      } else {
+        global.onerror = function () {
+        };
+      }
+      var i = Mocha.utils.indexOf(uncaughtExceptionHandlers, fn);
+      if (i != -1) {
+        uncaughtExceptionHandlers.splice(i, 1);
+      }
     }
-    var i = Mocha.utils.indexOf(uncaughtExceptionHandlers, fn);
-    if (i != -1) { uncaughtExceptionHandlers.splice(i, 1); }
-  }
-};
+  };
 
-/**
- * Implements uncaughtException listener.
- */
+  /**
+   * Implements uncaughtException listener.
+   */
 
-process.on = function(e, fn){
-  if ('uncaughtException' == e) {
-    global.onerror = function(err, url, line){
-      fn(new Error(err + ' (' + url + ':' + line + ')'));
-      return true;
-    };
-    uncaughtExceptionHandlers.push(fn);
-  }
-};
-
+  process.on = function (e, fn) {
+    if ('uncaughtException' == e) {
+      global.onerror = function (err, url, line) {
+        fn(new Error(err + ' (' + url + ':' + line + ')'));
+        return true;
+      };
+      uncaughtExceptionHandlers.push(fn);
+    }
+  };
+}
 /**
  * Expose mocha.
  */
@@ -6323,9 +6334,7 @@ mocha.run = function(fn){
 /**
  * Expose the process shim.
  */
-
 Mocha.process = process;
-
 //  Exposes Mocha class
-practical.mocha.Mocha = Mocha;
+global.practical.mocha.Mocha = Mocha;
 })();

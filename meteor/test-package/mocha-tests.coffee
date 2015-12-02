@@ -19,18 +19,21 @@ describe '2 - Async test', ()->
     Meteor.setTimeout =>
       done("I'm throwing")
     , 1000
-#
-#describe '3 - Skipped test', ()->
-#  it.skip 'should pass', (done)->
-#    Meteor.setTimeout =>
-#      done()
-#    , 1000
-#
-#describe.skip '4 - Skipped suite', ()->
-#  it 'should pass', (done)->
-#    Meteor.setTimeout =>
-#      done()
-#    , 1000
+
+describe '3 - Skipped test', ()->
+  it.skip '3.1 - should skip test', (done)->
+    Meteor.setTimeout =>
+      done()
+    , 1000
+
+  it '3.2 - should skip test'
+
+describe '4 - Timeout suite', ()->
+  it 'should failed', (done)->
+    setTimeout =>
+      throw new Error("Timeout suite")
+      done()
+    , 100
 
 
 
